@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Global Daily Intelligence</title>
+<style>
+body{margin:0;background:#f4f6f8;color:#17202a;font-family:Arial,sans-serif}
+header{background:#14213d;color:#fff;padding:30px 6%} header h1{margin:0 0 8px}
+main{max-width:1450px;margin:25px auto;padding:0 20px}.meta,.watch,.region{background:#fff;border-radius:14px;padding:22px;margin-bottom:24px;box-shadow:0 2px 8px #00000012}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.story{border:1px solid #e0e5ea;border-radius:10px;padding:15px;margin:12px 0}
+.story h3{margin:9px 0 6px;font-size:17px}.small{font-size:12px;color:#68717c}
+.tag{font-size:10px;font-weight:bold;padding:5px 8px;border-radius:5px;background:#e8edf3}
+.why{margin-top:10px;padding:10px;background:#f7f8fa;border-radius:7px}.source{margin-top:9px}.source a{color:#1d5fa7}
+.market{background:#f7f8ef}.snapshot{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.index{border:1px solid #ddd;padding:12px;border-radius:8px}
+@media(max-width:850px){.cols{grid-template-columns:1fr}.snapshot{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><h1>Global Daily Intelligence</h1><div id="date">Laden…</div></header>
+<main id="app"><p>Dashboard wordt geladen…</p></main>
+<script>
+async function load(){
+  const r=await fetch('data/daily.json',{cache:'no-store'});
+  if(!r.ok) throw new Error('daily.json kon niet worden geladen');
+  const d=await r.json();
+  document.getElementById('date').textContent='Automatische snapshot • '+new Date(d.generated_at).toLocaleString('nl-BE');
+  let h='';
+  for(const region of ['Europe','USA','Asia']){
+    h+=`<section class="region"><h2>${region}</h2><div class="cols">`;
+    for(const cat of ['General Trending','Markets & Economy']){
+      h+=`<div><h3>${cat}</h3>`;
+      const arr=d.summary?.[region]?.[cat]||[];
+      if(!arr.length) h+='<p class="small">Geen stories boven de relevantiedrempel.</p>';
+      for(const s of arr){
+        h+=`<article class="story ${cat==='Markets & Economy'?'market':''}">
+        <span class="tag">${cat}</span><h3>${s.title}</h3>
+        <div class="small">Trend ${s.trend_score} • Novelty ${s.novelty} • ${s.source}</div>
+        <p>${s.summary||'Geen samenvatting beschikbaar.'}</p>
+        <div class="why"><b>Waarom belangrijk?</b><br>${s.why_it_matters}</div>
+        <div class="small"><b>Wat veranderde?</b> ${s.what_changed}</div>
+        <div class="source"><a href="${s.url}" target="_blank" rel="noopener">Bron openen</a></div>
+        </article>`;
+      }
+      h+='</div>';
+    }
+    h+='</div></section>';
+  }
+  h+='<section class="region"><h2>Market Snapshot</h2>';
+  const ms=d.market_snapshot||{};
+  for(const region of ['Europe','USA','Asia']){
+    h+=`<h3>${region}</h3><div class="snapshot">`;
+    for(const [name,x] of Object.entries(ms[region]||{})){
+      const val=x.value==null?'—':Number(x.value).toLocaleString('en-US',{maximumFractionDigits:2});
+      const day=x.day_pct==null?'—':(x.day_pct>=0?'+':'')+Number(x.day_pct).toFixed(2)+'%';
+      const ytd=x.ytd_pct==null?'—':(x.ytd_pct>=0?'+':'')+Number(x.ytd_pct).toFixed(2)+'%';
+      h+=`<div class="index"><b>${name}</b><br><strong>${val}</strong><br><span class="small">Day: ${day} • YTD: ${ytd}</span></div>`;
+    }
+    h+='</div>';
+  }
+  h+='<div class="small">Marktdata wordt door de cloud-engine opnieuw opgehaald.</div></section>';
+  h+='<section class="watch"><h2>Engine status</h2><p>RSS + GDELT → deduplicatie → clustering → regio/categorie → novelty → trend score → daily snapshot.</p></section>';
+  document.getElementById('app').innerHTML=h;
+}
+load().catch(e=>document.getElementById('app').innerHTML='<div class="meta"><b>Dashboard kon de actuele data niet laden.</b><br><span class="small">'+e.message+'</span></div>');
+</script>
+</body></html>
