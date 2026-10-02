@@ -1,0 +1,9 @@
+{
+  "regions":["Europe","USA","Asia"],
+  "categories":["General Trending","Markets & Economy"],
+  "max_stories_per_category":5,
+  "novelty_threshold":0.34,
+  "cluster_similarity_threshold":0.42,
+  "sources":{"rss":"Built-in public RSS feeds","gdelt":"GDELT DOC 2.0"},
+  "market_snapshot":["STOXX 600","DAX","CAC 40","FTSE 100","S&P 500","Nasdaq 100","Nikkei 225","CSI 300"]
+}
