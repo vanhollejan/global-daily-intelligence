@@ -10,7 +10,7 @@ from markets import build_market_snapshot
 import urllib.request
 import xml.etree.ElementTree as ET
 
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 DATA=ROOT/"data"
 ARCHIVE=DATA/"archive"
 REGIONS=["Europe","USA","Asia"]
