@@ -92,7 +92,7 @@ EXCLUDED_TERMS=["sports","football","soccer","tennis","cricket","baseball","bask
 "celebrity","movie review","tv review","film review","book review","album review","concert review",
 "product review","tablet review","phone review","laptop review","gaming","video game","horoscope",
 "recipe","fashion","lifestyle","travel tips","best restaurants","restaurant review","shopping guide",
-"real estate listings","property listings","box office","reality tv"]
+"real estate listings","property listings","box office","reality tv"," review –"," review -","review:","reviews:","steelers","browns","braves","phillies","dodgers","yankees","lakers","celtics","chiefs","cowboys","manchester united","liverpool fc","arsenal","chelsea","tottenham","barcelona","real madrid","champions league","nlds","playoffs","touchdown","quarterback","field goal"]
 
 STOPWORDS=set("the and for with from that this have has are was were will into after before about over under says said their they them its his her our your a an of to in on at by as is be it or not than more new latest amid de het een van voor met op om te en aan dat die dit een is zijn was wordt".split())
 
@@ -192,8 +192,6 @@ def load_market_feeds():
         for feed in feeds:
             try:
                 items=parse_rss(fetch(feed),region)
-                for a in items:
-                    a.category="Markets & Economy"
                 articles.extend(items)
             except Exception as e:
                 print("Market RSS failed:",feed,e)
@@ -345,7 +343,7 @@ def build():
 
     output={
         "generated_at":datetime.now(timezone.utc).isoformat(),
-        "engine_version":"1.4.0",
+        "engine_version":"1.4.1",
         "market_snapshot":build_market_snapshot(),
         "rules":{
             "one_story_one_category":True,
