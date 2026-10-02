@@ -240,12 +240,17 @@ def assign_region(article):
         return article.region_hint
     return max(REGIONS,key=lambda r:scores[r])
 
-def load_archive():
+def load_archive(exclude_date=None):
     previous=[]
     if ARCHIVE.exists():
-        for p in sorted(ARCHIVE.glob("*.json"))[-14:]:
-            try:previous += [x.get("title","") for x in json.loads(p.read_text(encoding="utf-8")).get("stories",[])]
-            except Exception:pass
+        files=sorted(ARCHIVE.glob("*.json"))
+        if exclude_date:
+            files=[p for p in files if p.stem != exclude_date]
+        for p in files[-14:]:
+            try:
+                previous += [x.get("title","") for x in json.loads(p.read_text(encoding="utf-8")).get("stories",[])]
+            except Exception:
+                pass
     return previous
 
 def novelty_score(title,old):
@@ -279,7 +284,11 @@ def build():
     for r in REGIONS:raw.extend(gdelt_articles(r))
     raw=[a for a in deduplicate(raw)
          if not any(term in f"{a.title} {a.summary}".lower() for term in EXCLUDED_TERMS)]
-    clusters=cluster(raw);old=load_archive();candidates=[]
+    clusters=cluster(raw)
+    today=datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Ignore earlier runs from today. Novelty is a day-to-day concept.
+    old=load_archive(exclude_date=today)
+    candidates=[]
     for c in clusters:
         a=representative(c)
         a.cluster_id=hashlib.sha1(norm_title(a.title).encode()).hexdigest()[:12]
@@ -305,7 +314,7 @@ def build():
 
     output={
         "generated_at":datetime.now(timezone.utc).isoformat(),
-        "engine_version":"1.2.0",
+        "engine_version":"1.2.1",
         "market_snapshot":build_market_snapshot(),
         "rules":{
             "one_story_one_category":True,
