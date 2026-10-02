@@ -82,9 +82,12 @@ GENERAL_TERMS=["war","peace","ceasefire","election","government","president","mi
 "artificial intelligence","technology","climate","earthquake"]
 
 # Stories that are normally noise for a serious daily intelligence dashboard.
-EXCLUDED_TERMS=["sports","football","soccer","tennis","cricket","celebrity","movie review","tv review",
-"product review","tablet review","phone review","gaming","horoscope","recipe","fashion","lifestyle",
-"travel tips","best restaurants","shopping guide","real estate listings"]
+EXCLUDED_TERMS=["sports","football","soccer","tennis","cricket","baseball","basketball","nfl","nba","mlb",
+"premier league","champions league","world cup","grand prix","formula 1","f1 ","golf","rugby",
+"celebrity","movie review","tv review","film review","book review","album review","concert review",
+"product review","tablet review","phone review","laptop review","gaming","video game","horoscope",
+"recipe","fashion","lifestyle","travel tips","best restaurants","restaurant review","shopping guide",
+"real estate listings","property listings","box office","reality tv"]
 
 STOPWORDS=set("the and for with from that this have has are was were will into after before about over under says said their they them its his her our your a an of to in on at by as is be it or not than more new latest amid de het een van voor met op om te en aan dat die dit een is zijn was wordt".split())
 
@@ -258,9 +261,16 @@ def novelty_score(title,old):
     return max(0.0,min(1.0,1.0-max((similarity(title,x) for x in old),default=0)))
 
 def impact_score(article):
-    terms=["president","government","central bank","war","ceasefire","election","sanctions","tariff",
-           "interest rate","inflation","oil","energy","bank","markets","trade","security","summit"]
-    return min(1.0,0.25+0.09*contains_any(f"{article.title} {article.summary}",terms))
+    text=f"{article.title} {article.summary}".lower()
+    high=["war","ceasefire","invasion","major attack","central bank","interest rate","inflation",
+          "tariff","sanctions","trade war","financial crisis","bank failure","market selloff",
+          "government falls","election","emergency","nuclear","missile","energy crisis"]
+    medium=["president","government","minister","summit","security","military","oil","energy",
+            "bank","markets","trade","budget","gdp","employment","regulation","court"]
+    score=0.20+0.12*contains_any(text,high)+0.055*contains_any(text,medium)
+    if article.category=="Markets & Economy":
+        score+=0.08
+    return min(1.0,score)
 
 def trend_score(article,cluster_size,novelty):
     age=max(0,(datetime.now(timezone.utc)-parse_date(article.published)).total_seconds()/3600)
@@ -268,7 +278,7 @@ def trend_score(article,cluster_size,novelty):
     breadth=min(1,math.log1p(cluster_size)/math.log(8))
     quality=article.source_quality
     # Source quality is a ranking factor, not a hard substitute for news value.
-    return round(100*(0.30*recency+0.22*novelty+0.23*impact_score(article)+0.10*breadth+0.15*quality),1)
+    return round(100*(0.27*recency+0.20*novelty+0.31*impact_score(article)+0.07*breadth+0.15*quality),1)
 
 def why_matters(article):
     return ("Dit kan marktverwachtingen, prijzen, rente, bedrijfsresultaten of economische vooruitzichten beïnvloeden."
@@ -297,6 +307,8 @@ def build():
         a.novelty=round(novelty_score(a.title,old),3)
         a.source_breadth=len(set(x.source for x in c))
         a.trend_score=trend_score(a,a.source_breadth,a.novelty)
+        if a.source_breadth>=2:
+            a.trend_score=round(min(100,a.trend_score+3),1)
         a.why_it_matters=why_matters(a)
         a.what_changed=what_changed(a)
         # Low-quality single-source material is not strong enough for the dashboard.
@@ -314,7 +326,7 @@ def build():
 
     output={
         "generated_at":datetime.now(timezone.utc).isoformat(),
-        "engine_version":"1.2.1",
+        "engine_version":"1.3.0",
         "market_snapshot":build_market_snapshot(),
         "rules":{
             "one_story_one_category":True,
