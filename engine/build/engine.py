@@ -21,6 +21,11 @@ DEFAULT_FEEDS={
 "USA":["https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml","https://www.theguardian.com/us-news/rss"],
 "Asia":["https://feeds.bbci.co.uk/news/world/asia/rss.xml","https://www.theguardian.com/world/asia/rss"]}
 
+MARKET_FEEDS={
+"Europe":["https://www.cnbc.com/id/100727362/device/rss/rss.html","https://www.ft.com/world/europe?format=rss"],
+"USA":["https://www.cnbc.com/id/100003114/device/rss/rss.html","https://www.ft.com/companies?format=rss"],
+"Asia":["https://www.cnbc.com/id/19836768/device/rss/rss.html","https://www.ft.com/markets?format=rss"]}
+
 GDELT_QUERIES={
 "Europe":'(Europe OR EU OR European OR Germany OR France OR UK)',
 "USA":'("United States" OR USA OR Washington OR Trump OR American)',
@@ -45,7 +50,7 @@ TRUSTED_DOMAINS={
 SOURCE_QUALITY={
 "reuters.com":1.00,"apnews.com":1.00,"bbc.co.uk":1.00,"bbc.com":1.00,
 "theguardian.com":0.92,"dw.com":0.92,"euronews.com":0.90,"ft.com":0.98,
-"bloomberg.com":0.98,"politico.eu":0.90,"politico.com":0.90,
+"bloomberg.com":0.98,"cnbc.com":0.90,"politico.eu":0.90,"politico.com":0.90,
 "france24.com":0.88,"rfi.fr":0.88,"aljazeera.com":0.88,"cnbc.com":0.90,
 "cnn.com":0.88,"nytimes.com":0.95,"washingtonpost.com":0.95,"wsj.com":0.98,
 "npr.org":0.88,"abcnews.go.com":0.88,"nbcnews.com":0.88,"cbsnews.com":0.88,
@@ -181,11 +186,24 @@ def load_feeds():
             except Exception as e:print("RSS failed:",feed,e)
     return articles
 
+def load_market_feeds():
+    articles=[]
+    for region,feeds in MARKET_FEEDS.items():
+        for feed in feeds:
+            try:
+                items=parse_rss(fetch(feed),region)
+                for a in items:
+                    a.category="Markets & Economy"
+                articles.extend(items)
+            except Exception as e:
+                print("Market RSS failed:",feed,e)
+    return articles
+
 def deduplicate(articles):
     by_url={}
     for a in articles:
         key=a.url.split("#")[0].rstrip("/")
-        if key not in by_url or len(a.summary)>len(by_url[key].summary):
+        if key not in by_url or a.category=="Markets & Economy" or len(a.summary)>len(by_url[key].summary):
             by_url[key]=a
     return list(by_url.values())
 
@@ -291,6 +309,7 @@ def what_changed(article):
 def build():
     DATA.mkdir(exist_ok=True);ARCHIVE.mkdir(exist_ok=True)
     raw=load_feeds()
+    raw.extend(load_market_feeds())
     for r in REGIONS:raw.extend(gdelt_articles(r))
     raw=[a for a in deduplicate(raw)
          if not any(term in f"{a.title} {a.summary}".lower() for term in EXCLUDED_TERMS)]
@@ -302,7 +321,7 @@ def build():
     for c in clusters:
         a=representative(c)
         a.cluster_id=hashlib.sha1(norm_title(a.title).encode()).hexdigest()[:12]
-        a.category=classify_category(a.title,a.summary)
+        a.category=a.category or classify_category(a.title,a.summary)
         a.region=assign_region(a)
         a.novelty=round(novelty_score(a.title,old),3)
         a.source_breadth=len(set(x.source for x in c))
@@ -326,7 +345,7 @@ def build():
 
     output={
         "generated_at":datetime.now(timezone.utc).isoformat(),
-        "engine_version":"1.3.0",
+        "engine_version":"1.4.0",
         "market_snapshot":build_market_snapshot(),
         "rules":{
             "one_story_one_category":True,
