@@ -1,0 +1,33 @@
+name: Build Global Daily Intelligence
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 6 * * *"
+      timezone: "Europe/Brussels"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build daily intelligence
+        run: python engine/build/engine.py
+
+      - name: Commit daily snapshot
+        run: |
+          git config user.name "Global Daily Intelligence Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/daily.json data/archive/
+          git diff --cached --quiet || git commit -m "Update daily intelligence"
+          git push
