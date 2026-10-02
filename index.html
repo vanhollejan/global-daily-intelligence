@@ -1,66 +1,157 @@
 <!doctype html>
 <html lang="nl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Global Daily Intelligence</title>
 <style>
-body{margin:0;background:#f4f6f8;color:#17202a;font-family:Arial,sans-serif}
-header{background:#14213d;color:#fff;padding:30px 6%} header h1{margin:0 0 8px}
-main{max-width:1450px;margin:25px auto;padding:0 20px}.meta,.watch,.region{background:#fff;border-radius:14px;padding:22px;margin-bottom:24px;box-shadow:0 2px 8px #00000012}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.story{border:1px solid #e0e5ea;border-radius:10px;padding:15px;margin:12px 0}
-.story h3{margin:9px 0 6px;font-size:17px}.small{font-size:12px;color:#68717c}
-.tag{font-size:10px;font-weight:bold;padding:5px 8px;border-radius:5px;background:#e8edf3}
-.why{margin-top:10px;padding:10px;background:#f7f8fa;border-radius:7px}.source{margin-top:9px}.source a{color:#1d5fa7}
-.market{background:#f7f8ef}.snapshot{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.index{border:1px solid #ddd;padding:12px;border-radius:8px}
-@media(max-width:850px){.cols{grid-template-columns:1fr}.snapshot{grid-template-columns:1fr 1fr}}
+:root{
+  --bg:#292929; --panel:#303030; --panel2:#353535; --line:#555;
+  --text:#e7e7e7; --muted:#a9a9a9; --cyan:#08a8df; --cyan2:#0b9ed0;
+  --green:#9bd23b; --red:#e43116; --white:#f4f4f4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#242424;color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:13px}
+a{color:#08b9ef;text-decoration:none}
+a:hover{text-decoration:underline}
+.app{max-width:1500px;margin:0 auto;background:var(--bg);min-height:100vh}
+.topbar{height:44px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.home{color:var(--cyan);font-size:15px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:13px 14px 15px;border-bottom:1px solid var(--line)}
+.brand{font-size:23px;font-weight:400;color:#fff}
+.date{color:var(--muted);font-size:12px;text-align:right}
+.section{margin:0 0 4px;border:1px solid var(--line);background:var(--panel)}
+.section-title{height:35px;padding:9px 10px;color:var(--cyan);font-size:15px;font-weight:400;border-bottom:1px solid var(--line)}
+.section-body{padding:12px}
+.market-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.market-card{background:#303030;border:1px solid #484848;padding:9px 10px;min-height:78px}
+.market-name{font-size:11px;color:#c5c5c5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.market-value{font-size:20px;font-weight:bold;margin:7px 0 3px;color:#f3f3f3}
+.market-meta{font-size:11px;color:var(--muted)}
+.up{color:var(--green)} .down{color:var(--red)}
+.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.region-name{font-size:18px;color:#fff;font-weight:400;margin-bottom:8px}
+.category{border:1px solid var(--line);background:var(--panel2);margin-bottom:10px}
+.category-title{padding:8px 10px;color:var(--cyan);font-size:14px;border-bottom:1px solid var(--line)}
+.story{padding:11px 12px;border-bottom:1px solid #4a4a4a}
+.story:last-child{border-bottom:0}
+.story-head{display:flex;gap:9px;align-items:flex-start}
+.story-number{color:var(--cyan);font-size:12px;min-width:18px}
+.story-title{font-size:14px;line-height:1.3;color:#fff;font-weight:bold}
+.story-source{font-size:10px;color:#999;margin-top:3px}
+.story-summary{font-size:12px;color:#c7c7c7;line-height:1.42;margin:7px 0}
+.why{border-left:3px solid var(--cyan);background:#292929;padding:7px 9px;color:#d4d4d4;font-size:11px;line-height:1.4}
+.why b{color:#fff}
+.story-links{font-size:10px;margin-top:6px}
+.story-links a{margin-right:12px}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.watch-card{background:var(--panel2);border:1px solid var(--line);padding:12px}
+.watch-card h3{color:var(--cyan);font-size:14px;font-weight:400;margin:0 0 8px}
+.watch-item{padding:7px 0;border-bottom:1px solid #484848;font-size:12px;line-height:1.4}
+.watch-item:last-child{border-bottom:0}
+.footer{padding:14px;color:#888;font-size:10px;text-align:right}
+.empty{color:#888;font-size:11px;padding:10px}
+@media(max-width:1100px){.market-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:800px){.region-grid,.bottom-grid{grid-template-columns:1fr}.market-grid{grid-template-columns:repeat(2,1fr)}.header{display:block}.date{text-align:left;margin-top:5px}}
 </style>
 </head>
 <body>
-<header><h1>Global Daily Intelligence</h1><div id="date">Laden…</div></header>
-<main id="app"><p>Dashboard wordt geladen…</p></main>
+<div class="app">
+  <div class="topbar"><a class="home" href="#">Home</a></div>
+  <header class="header">
+    <div class="brand">Global Daily Intelligence</div>
+    <div class="date" id="date">Laden…</div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="section-title">Market Snapshot</div>
+      <div class="section-body"><div class="market-grid" id="markets"></div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">News Intelligence</div>
+      <div class="section-body"><div class="region-grid" id="regions"></div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">What Changed / Developments to Watch</div>
+      <div class="section-body"><div class="bottom-grid">
+        <div class="watch-card"><h3>What Changed?</h3><div id="changed"></div></div>
+        <div class="watch-card"><h3>Developments to Watch</h3><div id="watch"></div></div>
+      </div></div>
+    </section>
+  </main>
+  <div class="footer">Global Daily Intelligence • automatische dagelijkse snapshot</div>
+</div>
+
 <script>
 async function load(){
   const r=await fetch('data/daily.json',{cache:'no-store'});
   if(!r.ok) throw new Error('daily.json kon niet worden geladen');
   const d=await r.json();
-  document.getElementById('date').textContent='Automatische snapshot • '+new Date(d.generated_at).toLocaleString('nl-BE');
-  let h='';
+
+  document.getElementById('date').textContent=
+    'Snapshot • '+new Date(d.generated_at).toLocaleString('nl-BE');
+
+  const markets=[];
   for(const region of ['Europe','USA','Asia']){
-    h+=`<section class="region"><h2>${region}</h2><div class="cols">`;
-    for(const cat of ['General Trending','Markets & Economy']){
-      h+=`<div><h3>${cat}</h3>`;
-      const arr=d.summary?.[region]?.[cat]||[];
-      if(!arr.length) h+='<p class="small">Geen stories boven de relevantiedrempel.</p>';
-      for(const s of arr){
-        h+=`<article class="story ${cat==='Markets & Economy'?'market':''}">
-        <span class="tag">${cat}</span><h3>${s.title}</h3>
-        <div class="small">Trend ${s.trend_score} • Novelty ${s.novelty} • ${s.source}</div>
-        <p>${s.summary||'Geen samenvatting beschikbaar.'}</p>
-        <div class="why"><b>Waarom belangrijk?</b><br>${s.why_it_matters}</div>
-        <div class="small"><b>Wat veranderde?</b> ${s.what_changed}</div>
-        <div class="source"><a href="${s.url}" target="_blank" rel="noopener">Bron openen</a></div>
-        </article>`;
-      }
-      h+='</div>';
-    }
-    h+='</div></section>';
-  }
-  h+='<section class="region"><h2>Market Snapshot</h2>';
-  const ms=d.market_snapshot||{};
-  for(const region of ['Europe','USA','Asia']){
-    h+=`<h3>${region}</h3><div class="snapshot">`;
-    for(const [name,x] of Object.entries(ms[region]||{})){
-      const val=x.value==null?'—':Number(x.value).toLocaleString('en-US',{maximumFractionDigits:2});
+    for(const [name,x] of Object.entries(d.market_snapshot?.[region]||{})){
+      const value=x.value==null?'—':Number(x.value).toLocaleString('en-US',{maximumFractionDigits:2});
       const day=x.day_pct==null?'—':(x.day_pct>=0?'+':'')+Number(x.day_pct).toFixed(2)+'%';
       const ytd=x.ytd_pct==null?'—':(x.ytd_pct>=0?'+':'')+Number(x.ytd_pct).toFixed(2)+'%';
-      h+=`<div class="index"><b>${name}</b><br><strong>${val}</strong><br><span class="small">Day: ${day} • YTD: ${ytd}</span></div>`;
+      const cls=x.day_pct==null?'':x.day_pct>=0?'up':'down';
+      markets.push(
+        '<div class="market-card">'+
+        '<div class="market-name">'+name+'</div>'+
+        '<div class="market-value">'+value+'</div>'+
+        '<div class="market-meta"><span class="'+cls+'">'+day+'</span> day&nbsp;&nbsp; <span>'+ytd+'</span> YTD</div>'+
+        '</div>');
     }
-    h+='</div>';
   }
-  h+='<div class="small">Marktdata wordt door de cloud-engine opnieuw opgehaald.</div></section>';
-  h+='<section class="watch"><h2>Engine status</h2><p>RSS + GDELT → deduplicatie → clustering → regio/categorie → novelty → trend score → daily snapshot.</p></section>';
-  document.getElementById('app').innerHTML=h;
+  document.getElementById('markets').innerHTML=markets.join('');
+
+  let regions='';
+  const allStories=[];
+  for(const region of ['Europe','USA','Asia']){
+    regions+='<div><div class="region-name">'+region+'</div>';
+    for(const cat of ['General Trending','Markets & Economy']){
+      const arr=d.summary?.[region]?.[cat]||[];
+      regions+='<div class="category"><div class="category-title">'+cat+'</div>';
+      if(!arr.length) regions+='<div class="empty">Geen stories boven de relevantiedrempel.</div>';
+      arr.forEach((s,i)=>{
+        allStories.push({...s,_region:region});
+        regions+='<article class="story">'+
+          '<div class="story-head"><div class="story-number">'+(i+1)+'.</div><div>'+
+          '<div class="story-title">'+escapeHtml(s.title)+'</div>'+
+          '<div class="story-source">'+escapeHtml(s.source)+' • trend '+s.trend_score+'</div>'+
+          '</div></div>'+
+          '<div class="story-summary">'+escapeHtml(s.summary||s.what_changed||'Geen samenvatting beschikbaar.')+'</div>'+
+          '<div class="why"><b>Waarom belangrijk?</b> '+escapeHtml(s.why_it_matters||'')+'</div>'+
+          '<div class="story-links"><a href="'+escapeAttr(s.url)+'" target="_blank" rel="noopener">Bron openen →</a>'+
+          (s.what_changed?'<span>Wat veranderde: '+escapeHtml(s.what_changed)+'</span>':'')+
+          '</div></article>';
+      });
+      regions+='</div>';
+    }
+    regions+='</div>';
+  }
+  document.getElementById('regions').innerHTML=regions;
+
+  const changed=allStories.slice().sort((a,b)=>b.trend_score-a.trend_score).slice(0,5);
+  document.getElementById('changed').innerHTML=changed.map(s=>
+    '<div class="watch-item"><b>'+escapeHtml(s.title)+'</b><br><span class="story-source">'+s._region+' • '+escapeHtml(s.source)+'</span></div>'
+  ).join('');
+
+  const watch=allStories.slice().sort((a,b)=>(b.novelty-a.novelty)).slice(0,5);
+  document.getElementById('watch').innerHTML=watch.map(s=>
+    '<div class="watch-item"><b>'+escapeHtml(s.title)+'</b><br><span class="story-source">'+
+    'Novelty '+Number(s.novelty).toFixed(2)+' • '+s._region+'</span></div>'
+  ).join('');
 }
-load().catch(e=>document.getElementById('app').innerHTML='<div class="meta"><b>Dashboard kon de actuele data niet laden.</b><br><span class="small">'+e.message+'</span></div>');
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function escapeAttr(v){return String(v).replace(/"/g,'&quot;');}
+load().catch(e=>document.getElementById('regions').innerHTML='<div class="empty">Dashboard kon de actuele data niet laden: '+escapeHtml(e.message)+'</div>');
 </script>
-</body></html>
+</body>
+</html>
