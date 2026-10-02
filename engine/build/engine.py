@@ -210,7 +210,7 @@ def classify_category(title,summary):
     strong=["interest rate","inflation","stock market","shares fall","shares rise","oil prices",
             "gold prices","bond yields","government bonds","earnings","gdp","budget deficit","currency",
             "markets sell","market selloff","market rally","housing market","bank profits","credit market",
-            "quarterly results","company revenue","company profit","trade deficit","trade surplus"]
+            "quarterly results","company revenue","company profit","profit","profits","revenue","earnings","trade deficit","trade surplus"]
     # Primary angle: financial/economic language must describe the central development,
     # not merely a secondary consequence of a political or geopolitical story.
     if any(x in text for x in strong):
@@ -233,8 +233,11 @@ def region_score(article,region):
 
 def assign_region(article):
     scores={r:region_score(article,r) for r in REGIONS}
-    # When the text contains a clear country/actor signal, use that rather than
-    # inheriting the GDELT query region.
+    direct_scores={r:contains_any(f"{article.title} {article.summary}".lower(),COUNTRY_REGIONS[r]) for r in REGIONS}
+    # When the article contains no usable regional signal at all, fall back to
+    # the feed/query region rather than arbitrarily defaulting to Europe.
+    if max(direct_scores.values(),default=0)==0 and article.region_hint in REGIONS:
+        return article.region_hint
     return max(REGIONS,key=lambda r:scores[r])
 
 def load_archive():
